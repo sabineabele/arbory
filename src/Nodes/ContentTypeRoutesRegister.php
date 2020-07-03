@@ -2,6 +2,7 @@
 
 namespace Arbory\Base\Nodes;
 
+use Arbory\Base\Http\Middleware\NodeActiveMiddleware;
 use Closure;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Collection;
@@ -113,14 +114,14 @@ class ContentTypeRoutesRegister
         foreach ($items as $item) {
             $slug = $base.'/'.$item->getSlug();
 
-            if (! $item->active) {
+            if (! $this->hasToRegister($item)) {
                 if (config('arbory.preview.enabled')) {
                     $this->registerPreviewRoutes($item, $slug);
                 }
                 continue;
             }
 
-            $this->registerNodeRoutes($item, $slug);
+            $this->registerNodeRoutes($item, $slug, [NodeActiveMiddleware::class]);
 
             if ($item->children->count()) {
                 $this->registerRoutesForNodeCollection($item->children, $slug);
@@ -161,16 +162,26 @@ class ContentTypeRoutesRegister
     /**
      * @param Node $node
      * @param $slug
+     * @param array $middleware
      */
-    protected function registerNodeRoutes(Node $node, $slug)
+    protected function registerNodeRoutes(Node $node, $slug, array $middleware = [])
     {
         $attributes = [
             'as' => 'node.'.$node->getKey().'.',
             'prefix' => $slug,
             'namespace' => false,
-            'middleware' => 'web',
+            'middleware' => array_merge(['web'], $middleware),
         ];
 
         $this->getRouter()->group($attributes, $this->getContentTypeHandler($node->getContentType()));
+    }
+
+    /**
+     * @param Node $node
+     * @return bool
+     */
+    protected function hasToRegister(Node $node)
+    {
+        return $node->isActive() || $node->isActiveInFuture();
     }
 }

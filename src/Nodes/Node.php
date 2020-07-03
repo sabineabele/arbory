@@ -170,4 +170,12 @@ class Node extends \Baum\Node
 
         return true;
     }
+
+    /**
+     * @return bool
+     */
+    public function isActiveInFuture()
+    {
+        return (! is_null($this->activate_at) && $this->activate_at->isFuture()) && ! $this->hasExpired();
+    }
 }

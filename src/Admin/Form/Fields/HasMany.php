@@ -234,6 +234,10 @@ class HasMany extends AbstractRelationField implements NestedFieldInterface, Rep
         return $rules;
     }
 
+    /**
+     * @param Model $model
+     * @return FieldSet
+     */
     public function getNestedFieldSet($model)
     {
         return $this->getRelationFieldSet($model, 0);

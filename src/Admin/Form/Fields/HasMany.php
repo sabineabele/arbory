@@ -4,6 +4,7 @@ namespace Arbory\Base\Admin\Form\Fields;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Arbory\Base\Admin\Form\FieldSet;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
@@ -215,13 +216,28 @@ class HasMany extends AbstractRelationField implements NestedFieldInterface, Rep
     {
         $rules = [];
 
-        foreach ($this->getRelationFieldSet($this->getRelatedModel(), '*')->getFields() as $field) {
-            $rules = array_merge($rules, $field->getRules());
+        $items = (array) request()->input($this->getNameSpacedName(), []);
+        $relatedModel = $this->getRelatedModel();
+
+        foreach ($items as $index => $item) {
+            if (filter_var(Arr::get($item, '_destroy'), FILTER_VALIDATE_BOOLEAN)) {
+                continue;
+            }
+
+            $fieldSet = $this->getRelationFieldSet($relatedModel, $index);
+
+            foreach ($fieldSet->getFields() as $field) {
+                $rules = array_merge($rules, $field->getRules());
+            }
         }
 
         return $rules;
     }
 
+    /**
+     * @param Model $model
+     * @return FieldSet
+     */
     public function getNestedFieldSet($model)
     {
         return $this->getRelationFieldSet($model, 0);

@@ -227,7 +227,11 @@ class HasMany extends AbstractRelationField implements NestedFieldInterface, Rep
             $fieldSet = $this->getRelationFieldSet($relatedModel, $index);
 
             foreach ($fieldSet->getFields() as $field) {
-                $rules = array_merge($rules, $field->getRules());
+                $fieldRules = array_map(function ($rule) use ($index) {
+                    return str_replace('*', $index, $rule);
+                }, $field->getRules());
+
+                $rules = array_merge($rules, $fieldRules);
             }
         }
 
